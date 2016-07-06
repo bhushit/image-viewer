@@ -10,6 +10,9 @@ var ipc = require('ipc');
 var fileSystem = require('./js/file-system');
 var constants = require('./js/constants');
 
+// File to store annotated images as json
+var filePath = './test.json';
+
 // jquery selectors
 var $currentImage = $('#currentImage'),
 	$previous = $('#previous'),
@@ -106,11 +109,33 @@ var _loadDir = function(dir, fileName) {
 	}
 
 	if(selectedImageIndex < imageFiles.length) {
-		showImage(selectedImageIndex);	
+		logImages(imageFiles);
+		showImage(selectedImageIndex);
 	}
 	else {
 		alert('No image files found in this directory.');
 	}
+}
+var logImages = function (imageFiles) {
+	for(var i=0; i < imageFiles.length; i++){
+		appendObject({index: i, name: imageFiles[i]});
+	}
+}
+
+var appendObject = function (obj){
+	if(fs.existsSync(filePath)){
+		var configFile = fs.readFileSync(filePath);
+		var config = JSON.parse(configFile);
+		config.push(obj);
+		var configJSON = JSON.stringify(config);
+		fs.writeFileSync(filePath, configJSON);
+	} else {
+		var data = [];
+		data.push(obj);
+		var configJSON = JSON.stringify(data);
+		fs.writeFileSync(filePath, configJSON);
+	}
+
 }
 
 var onOpen = function(filePath) {
@@ -156,10 +181,10 @@ var getCurrentFile = function() {
 var setRotateDegrees = function(deg) {
 	$currentImage.css({
 		 '-webkit-transform' : 'rotate('+deg+'deg)',
-	     '-moz-transform' : 'rotate('+deg+'deg)',  
-	      '-ms-transform' : 'rotate('+deg+'deg)',  
-	       '-o-transform' : 'rotate('+deg+'deg)',  
-	          'transform' : 'rotate('+deg+'deg)',  
+	     '-moz-transform' : 'rotate('+deg+'deg)',
+	      '-ms-transform' : 'rotate('+deg+'deg)',
+	       '-o-transform' : 'rotate('+deg+'deg)',
+	          'transform' : 'rotate('+deg+'deg)',
 	               'zoom' : 1
 	});
 
@@ -184,7 +209,7 @@ $rotateRight.click(function() {
 
 // Initialize the app
 var initialize = function() {
-	var appMenu = require('./js/app-menu'); 
+	var appMenu = require('./js/app-menu');
 	appMenu.initialize({
 		onOpen: onOpen,
 		onFileDelete: onFileDelete,
@@ -204,7 +229,7 @@ var initialize = function() {
 			filters: [
 				{
 					name: 'Images',
-					extensions: constants.SupportedImageExtensions	
+					extensions: constants.SupportedImageExtensions
 				}
 			]
 		},
@@ -214,6 +239,7 @@ var initialize = function() {
 			}
 		});
 	});
+
 
 	// handle navigation from left/right clicks
 	$(window).keydown(function(ev) {
